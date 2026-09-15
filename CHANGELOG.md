@@ -5,9 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## [Unreleased] (Release Readiness Gate Enforced)
+## [1.0.0] — 2026-09-16
 
-> **Release Status**: Preflight candidate release is held behind the deterministic production readiness gate (`docs/RELEASE_READINESS_GATE.md`). Release packaging and distribution are blocked until §1–§5 evidence criteria are empirically satisfied.
+> **Release Status**: All Tier A software release criteria satisfied. See `reports/release-gate/release-gate.json` for retained evidence with SHA-256 cryptographic hashes.
 
 ### Added
 
