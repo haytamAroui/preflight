@@ -1,40 +1,122 @@
+<div align="center">
+
 # Preflight
 
-### AI-assisted security review. Deterministic release confidence.
+### AI-Assisted Security Review &bull; Deterministic Release Confidence
 
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/before-deploy.svg?color=blue&logo=pypi&logoColor=white)](https://pypi.org/project/before-deploy/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![CI](https://github.com/haytamAroui/preflight/actions/workflows/ci.yml/badge.svg)](https://github.com/haytamAroui/preflight/actions/workflows/ci.yml)
+[![Release](https://github.com/haytamAroui/preflight/actions/workflows/release.yml/badge.svg)](https://github.com/haytamAroui/preflight/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Release Authority](https://img.shields.io/badge/Release%20Authority-Deterministic-black.svg)](docs/RELEASE_DISPOSITION.md)
-[![AI](https://img.shields.io/badge/AI-Advisory%20Only-purple.svg)](docs/ADVISORY_REVIEW_PLANE.md)
+[![AI Plane](https://img.shields.io/badge/AI%20Plane-Advisory%20Only-purple.svg)](docs/ADVISORY_REVIEW_PLANE.md)
 
-**Preflight** is a security assurance platform for teams shipping AI-generated and AI-assisted software.
+<p align="center">
+  <strong>Preflight</strong> is a security assurance platform and deterministic release gate engineered for teams building and shipping AI-generated and AI-assisted software.
+</p>
 
-It combines AI-powered discovery and investigation with deterministic security controls, evidence lineage, explicit human approval, verification history, and a final release decision that AI cannot override.
+> **"AI can discover. Humans can approve. Preflight decides from deterministic evidence."**
 
-> **AI can discover. Humans can approve. Preflight decides from deterministic evidence.**
+Preflight is built to answer one critical release question:  
+**Are we ready to ship this exact code, backed by reproducible, tamper-proof evidence?**
 
-Preflight is built for one question:
-
-**Are we ready to ship this exact code, with evidence we can inspect and reproduce?**
+[Quickstart](#-quickstart) &bull;
+[Key Features](#-key-features) &bull;
+[Architecture](#-architecture) &bull;
+[Lifecycle Workflow](#-from-scan-to-release-evidence) &bull;
+[MCP & Agent Integration](#-mcp--agent-integration) &bull;
+[Documentation](#-documentation)
 
 ---
 
-## Install and run
+</div>
 
-> **CLI note:** The CLI is available as `preflight` (recommended) and `before-deploy` (for backwards compatibility).
+## 💡 Why Preflight?
 
-### Quickstart (GitHub Actions)
+Modern engineering teams increasingly rely on LLMs and autonomous coding agents to author code. However, delegating software release authority to probabilistic AI introduces unpredictable gates, hallucinated assurances, and unverified security risks.
 
-Add Preflight to your CI pipeline:
+Preflight bridges this gap by decoupling **exploratory discovery** from **release authority**:
 
-```yaml
-- name: Run Preflight Security Gate
-  uses: haytamAroui/preflight@v1
-  with:
-    policy: 'rules/strict-ci-policy.yaml'
+| Dimension | Autonomous AI Agents | Traditional Static Scanners | Preflight |
+| :--- | :--- | :--- | :--- |
+| **Exploration & Context** | High (deep semantic reasoning) | Low (rigid pattern matching) | **Best of both**: AI-assisted deep investigation |
+| **Release Decision** | Probabilistic (unreliable gate) | Deterministic (noisy / rigid) | **Strictly Deterministic** (based on immutable evidence) |
+| **Evidence Lineage** | None (chat logs / transient diffs) | Local report files | **Content-addressed Evidence Graph** |
+| **Remediation** | Autonomous, unsupervised edits | Manual developer patching | **Human-governed proposals & verified patches** |
+| **Safety Invariant** | AI decides if code is safe | Tool flags errors | **AI is structurally prohibited from granting release** |
+
+---
+
+## ⚡ Quickstart
+
+### 1. Instant Run via `uvx` or `pipx` (Zero Install)
+
+Run a deterministic security scan against your repository right now without installing anything:
+
+```bash
+# Using uvx (recommended)
+uvx --from before-deploy preflight scan .
+
+# Or using pipx
+pipx run --spec before-deploy preflight scan .
 ```
 
-### Quickstart (Pre-commit)
+### 2. Package Installation
+
+Install via PyPI using your favorite package manager:
+
+```bash
+# Using uv
+uv add --dev before-deploy
+
+# Using pip
+pip install before-deploy
+```
+
+> **CLI alias note:** The CLI is available under both `preflight` (recommended) and `before-deploy` (backwards-compatible alias).
+
+### 3. GitHub Actions CI/CD Integration
+
+Enforce a deterministic security gate in your deployment pipeline:
+
+```yaml
+name: Preflight Security Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  security-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Preflight
+        run: pip install before-deploy
+
+      - name: Run Deterministic Security Gate
+        run: |
+          preflight scan . \
+            --policy rules/strict-ci-policy.yaml \
+            --output-dir reports/security-gate
+
+      - name: Upload Security Findings (SARIF)
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/security-gate/report.sarif
+```
+
+### 4. Pre-commit Hook
 
 Add Preflight to your `.pre-commit-config.yaml`:
 
@@ -46,432 +128,197 @@ repos:
       - id: preflight
 ```
 
-### Local Installation
+---
 
-#### Prerequisites
+## 🎯 Key Features
 
-You need:
+### 🛡️ Deterministic Security Gate
+- **Adaptive Project Profiling**: Automatically senses language ecosystems, web frameworks, API boundaries, and sensitive data paths.
+- **Fail-Closed Policy Engine**: Deterministic policy evaluation with explicit waiver governance and granular exit codes.
+- **Universal Evidence Outputs**: Generates comprehensive artifacts in `report.json`, human-readable `report.md`, and industry-standard `report.sarif`.
 
-- **Python 3.11+**
-- **Git**
-- **uv** (recommended) or **pip**
+### 🧠 Bounded AI Advisory Plane
+- **Multi-Model Support**: Leverage state-of-the-art models (OpenAI, Claude, open models via OpenCodeReview) for deep contextual inspection.
+- **Architectural Isolation**: Advisory findings are structurally tagged with `gate_effect=NONE`. AI recommendations can corroborate and advise, but **never** override deterministic policy.
+- **Evidence Challenges**: Formal reasoning mechanisms evaluating claims as `SUPPORTED`, `INSUFFICIENT`, `CONTRADICTED`, or `UNRESOLVED`.
 
-#### Clone & Run
+### 🔗 Content-Addressed Evidence Graph
+- **Immutable Lineage**: Every scan, finding, review claim, human approval, and regression test is cryptographically linked.
+- **Traceable Assurance Cases**: Connect high-level security claims directly to source code revisions and test executions.
 
-```bash
-git clone https://github.com/haytamAroui/preflight.git
-cd preflight
-uv sync --frozen --all-extras
-```
-
-Confirm the CLI works:
-
-```bash
-uv run preflight --help
-# or: uv run before-deploy --help
-```
-
-### Run your first scan
-
-```bash
-uv run before-deploy scan . \
-  --policy rules/default-policy.yaml \
-  --output-dir reports/self-scan
-```
-
-A completed scan writes evidence such as:
-
-```text
-reports/self-scan/report.json
-reports/self-scan/report.md
-reports/self-scan/report.sarif
-```
-
-### Scan another project
-
-From the Preflight repository root:
-
-```bash
-TARGET_REPOSITORY="/absolute/path/to/my-project"
-
-uv run before-deploy scan "$TARGET_REPOSITORY" \
-  --policy rules/default-policy.yaml \
-  --output-dir reports/my-project
-```
-
-For all scan options:
-
-```bash
-uv run before-deploy scan --help
-```
+### 👥 Human-in-the-Loop Remediation
+- **Explicit Human Approval**: AI can propose a remediation patch with citations, but only a human can authorize its materialization.
+- **Controlled Materialization**: Verifies exact patch applications and produces regression evidence to verify fixes before shipping.
 
 ---
 
-## Review before you ship
-
-Preview exactly what will be reviewed before invoking any advisory provider:
-
-```bash
-uv run before-deploy review "$TARGET_REPOSITORY" --preview
-```
-
-Run a unified review:
-
-```bash
-uv run before-deploy review "$TARGET_REPOSITORY" \
-  --policy rules/default-policy.yaml \
-  --output-dir reports/review
-```
-
-Optional OpenCodeReview integration can be enabled explicitly:
-
-```bash
-uv run before-deploy review "$TARGET_REPOSITORY" \
-  --policy rules/default-policy.yaml \
-  --ocr \
-  --output-dir reports/review
-```
-
-Advisory findings remain **non-authoritative**. Provider failures, model opinions, and AI confidence cannot change the deterministic gate result.
-
----
-
-## From scan to release evidence
-
-Preflight is more than a scanner. It provides an evidence-preserving assurance workflow:
-
-```text
-scan
-  ↓
-review
-  ↓
-inspect
-  ↓
-investigate
-  ↓
-explain
-  ↓
-propose
-  ↓
-approve        ← explicit human action
-  ↓
-fix            ← scoped, content-addressed patch artifact
-  ↓
-regress        ← controlled materialization + regression evidence
-  ↓
-verify
-  ↓
-history
-  ↓
-release        ← authoritative READY / HOLD / BLOCK / ERROR
-```
-
-Explore each stage:
-
-```bash
-uv run before-deploy inspect --help
-uv run before-deploy investigate --help
-uv run before-deploy explain --help
-uv run before-deploy propose --help
-uv run before-deploy approve --help
-uv run before-deploy fix --help
-uv run before-deploy regress --help
-uv run before-deploy verify --help
-uv run before-deploy history --help
-uv run before-deploy release --help
-```
-
-The final release command uses persisted deterministic policy evidence, the current verification selected by immutable history, exact materialization evidence, and the current workspace snapshot.
-
-**No LLM participates in the final release decision.**
-
----
-
-## Why Preflight
-
-AI reviewers are good at exploring code, connecting context, and proposing fixes. They are not a good place to put final release authority.
-
-Preflight separates discovery from authority:
-
-| Plane | What it does | Release authority |
-|---|---|---|
-| **AI discovery & reasoning** | Review, investigate, explain, challenge evidence, propose remediation | **None** |
-| **Human governance** | Approve a specific proposal and confirm exact patch materialization | **Explicit workflow authority, not release authority** |
-| **Deterministic assurance** | Scan, validate evidence, verify exact remediation, preserve history | **Deterministic evidence** |
-| **Release disposition** | Evaluate policy + current verification + current workspace | **Final authority** |
-
-That separation is the core product promise:
-
-**use powerful AI reasoning without turning probabilistic output into an unreviewable deployment gate.**
-
----
-
-## What Preflight gives you
-
-| Capability | What you get |
-|---|---|
-| **Deterministic security gate** | Adaptive repository profiling, bounded controls, policy evaluation, waivers, explicit control health, fail-closed errors, JSON/Markdown/SARIF output |
-| **Unified advisory review** | Deterministic findings and optional AI/third-party findings in one review artifact, with advisory findings structurally forced to `gate_effect=NONE` |
-| **Deterministic review scope** | Workspace, range, and commit preview with explicit included/excluded files before advisory execution |
-| **Provider isolation** | Provider-neutral advisory runtime, deterministic context selection, execution provenance, bounded budgets, retries for transient failures, and failure isolation |
-| **Evidence Graph** | Content-addressed lineage connecting repository state, controls, findings, policy, advisory context, provider execution, artifacts, and claims |
-| **Correlation & corroboration** | Deterministic location correlation, exact advisory deduplication, repeated-claim provenance, and diagnostic corroboration without confidence inflation |
-| **Inspect / investigate / explain** | Persisted evidence inspection, bounded investigation context, and citation-required advisory explanations |
-| **Evidence Challenge** | Structured `SUPPORTED`, `INSUFFICIENT`, `CONTRADICTED`, and `UNRESOLVED` outcomes over bounded evidence |
-| **Assurance cases** | Traceable advisory assurance graphs preserving initial vs expanded evidence and challenge relationships |
-| **Human-approved remediation** | Evidence-cited proposals, exact proposal approval, content-addressed patches, controlled materialization, and regression evidence |
-| **Deterministic verification** | Verification of the exact approved remediation against declared verification goals |
-| **Immutable verification history** | Linear verification history with explicit supersession instead of “best result wins” |
-| **Release disposition** | Final `READY`, `HOLD`, `BLOCK`, or `ERROR` from deterministic policy evidence, current verification, exact materialization, and current workspace |
-| **Benchmarks** | Labeled review benchmark, static-vs-exploratory comparison, caller-context experiments, repeated-run stability, latency/token/cost provenance, and production-readiness diagnostics |
-| **Developer integrations** | CLI, Python platform API, bounded MCP server, Claude Code client, and repo-scoped Codex skill |
-
----
-
-## The architecture
+## 🏗️ Architecture
 
 ```mermaid
 flowchart TD
-    Repo[Repository / Change] --> Scan[Deterministic Scan]
-    Repo --> Context[Bounded Advisory Context]
+    Repo["Repository / Code Change"] --> Scan["Deterministic Scan Engine"]
+    Repo --> Context["Bounded Advisory Context"]
 
-    Context --> AI[AI / Advisory Providers]
-    AI --> Findings[Advisory Findings]
-    Scan --> Deterministic[Deterministic Findings]
+    Context --> AI["AI Advisory Providers (LLMs)"]
+    AI --> Findings["Advisory Findings (gate_effect=NONE)"]
+    Scan --> Deterministic["Deterministic Findings"]
 
-    Findings --> Graph[Evidence Graph]
+    Findings --> Graph["Content-Addressed Evidence Graph"]
     Deterministic --> Graph
-    Graph --> Investigate[Inspect / Investigate / Explain]
-    Investigate --> Challenge[Evidence Challenge / Assurance Case]
-    Challenge --> Proposal[Remediation Proposal]
+    Graph --> Investigate["Inspect / Investigate / Explain"]
+    Investigate --> Challenge["Evidence Challenge & Assurance Case"]
+    Challenge --> Proposal["Remediation Proposal"]
 
-    Proposal --> Human[Explicit Human Approval]
-    Human --> Patch[Content-addressed Patch]
-    Patch --> Materialize[Controlled Materialization]
-    Materialize --> Verify[Deterministic Verification]
-    Verify --> History[Immutable Verification History]
+    Proposal --> Human["Explicit Human Approval"]
+    Human --> Patch["Cryptographic Patch"]
+    Patch --> Materialize["Controlled Materialization"]
+    Materialize --> Verify["Deterministic Verification"]
+    Verify --> History["Immutable Verification History"]
 
-    Scan --> Policy[PolicyDecision]
-    Policy --> Release[Deterministic Release Disposition]
+    Scan --> Policy["Policy Evaluation"]
+    Policy --> Release["Deterministic Release Disposition"]
     History --> Release
     Materialize --> Release
     Repo --> Release
 
-    AI -. never authorizes release .-> Release
+    AI -. structurally prohibited from authorizing release .-> Release
+
+    classDef primary fill:#2563eb,stroke:#1d4ed8,color:#fff;
+    classDef ai fill:#7c3aed,stroke:#6d28d9,color:#fff;
+    classDef gate fill:#059669,stroke:#047857,color:#fff;
+    classDef human fill:#ea580c,stroke:#c2410c,color:#fff;
+
+    class Scan,Deterministic,Verify,History primary;
+    class Context,AI,Findings,Investigate,Challenge,Proposal ai;
+    class Human,Patch human;
+    class Policy,Release gate;
 ```
 
-**AI output never becomes release authority.**
-
-See [`docs/RELEASE_DISPOSITION.md`](docs/RELEASE_DISPOSITION.md) and [`docs/ADVISORY_REVIEW_PLANE.md`](docs/ADVISORY_REVIEW_PLANE.md).
-
-What is enforced rather than only documented: [`tests/unit/test_architecture_boundary.py`](tests/unit/test_architecture_boundary.py) runs a real `scan` in an interpreter where the advisory plane cannot be imported and no provider credential is present, and fails the build if the scan engine (`orchestrator`, `policy`, `controls/`, `domains/`, `models`) gains a module-scope advisory import.
-
-Known exception, stated rather than implied: the human-authority chain (`verification`, `human_approval_patch`, `regression_evidence`) still links to the advisory plane at module scope, because `remediation_proposal` calls the evidence-explanation validators at runtime. Advisory data still cannot enter a `ReleaseDisposition` — that exclusion is enforced in `release_disposition.py` — but those modules cannot be *imported* without the advisory plane present. Closing that gap means moving the proposal/explanation contract into a neutral module that both planes depend on, which is a design change rather than an import change.
-
-That residual coupling is frozen in the same test as an **exact set**, so it can only shrink: a new module-scope dependency on the advisory plane fails the build, and so does removing a listed one without updating the list. The drift this project actually suffered — the deterministic half quietly acquiring requirements on the model stack — is now a test failure instead of a convention.
+> **Enforced Safety Boundary**: The release engine strictly prohibits advisory data from participating in `ReleaseDisposition`. Our continuous integration suite executes architectural boundary tests (`tests/unit/test_architecture_boundary.py`) that verify the deterministic core cannot import the advisory plane.
 
 ---
 
-## Security coverage
+## 🔄 From Scan to Release Evidence
 
-Preflight maintains a versioned capability registry and security-domain catalog with bounded controls and explicit scope.
+Preflight is a complete release-readiness platform providing a linear, auditable sequence of operations:
 
-Current coverage includes controls and/or profiles across:
-
-- **Python / FastAPI** — authentication/authorization markers, SSRF patterns, SQL injection shapes, command injection, JWT verification bypass, uploads/file handling, input validation, CORS, session security, data integrity, sensitive logging, dependency and release evidence
-- **JavaScript / TypeScript / Next.js** — SSRF, Server Actions, public environment exposure, session/CORS patterns, route error disclosure, dependency/release evidence
-- **Java / Spring** — Spring Security permit-all, Actuator exposure, credentialed wildcard CORS, JPA native-query injection
-- **Go** — TLS misuse, module evidence, bounded offline vulnerability snapshot checks, optional Gosec adapter
-- **PHP / Laravel**, **Rust / Cargo**, **Ruby / Rails** — bounded lockfile/dependency evidence profiles
-- **Docker / Terraform** — staged Trivy configuration evidence
-- **Docker Compose** — bounded privileged-service detection
-- **GitHub Actions / supply chain** — workflow hardening, lockfiles, SBOM/provenance/release-evidence controls
-
-External scanners remain isolated adapters with bounded execution and normalized output. A configured required scanner that fails becomes an explicit error — never a silent pass.
-
-See [`docs/CONTROL_CATALOG.md`](docs/CONTROL_CATALOG.md), [`docs/SECURITY_DOMAIN_CONTROL_CATALOG.md`](docs/SECURITY_DOMAIN_CONTROL_CATALOG.md), and [`docs/ADAPTIVE_PROJECT_PROFILING.md`](docs/ADAPTIVE_PROJECT_PROFILING.md).
-
----
-
-## Outcomes you can automate
-
-### Deterministic policy
-
-| Outcome | Exit code | Meaning |
-|---|---:|---|
-| `PASS` | `0` | Applicable configured controls completed without an unwaived blocking result |
-| `NOT_EVALUATED` | `0` | No configured control established a pass for the selected scope |
-| `BLOCK` | `10` | A policy-blocking finding remains |
-| `WAIVER_REQUIRED` | `11` | Policy requires an explicit valid waiver |
-| `ERROR` | `20` | Required evidence, tool execution, or input validation failed |
-
-### Final release disposition
-
-| Status | Meaning |
-|---|---|
-| `READY` | Declared deterministic release requirements are satisfied for the current workspace |
-| `HOLD` | Release evidence is incomplete, stale, drifted, waived, or below configured trust requirements |
-| `BLOCK` | Deterministic policy or current verification blocks release |
-| `ERROR` | Authoritative release evaluation failed |
-
-`READY` is intentionally bounded. It does not claim the application is vulnerability-free.
-
----
-
-## Evidence you can inspect
-
-Depending on the workflow, Preflight emits artifacts such as:
-
-```text
-report.json / report.md / report.sarif
-review.json / review.md
-review-session.json
-review-delta.json / review-delta.md
-inspection.json
-investigation-request.json / investigation.json
-explanation-request.json / explanation.json
-remediation-proposal.json
-human-approval.json
-patch.json
-patch-materialization.json
-regression-evidence.json
-verification.json
-verification-history.json
-release-disposition.json
+```
+scan ──▶ review ──▶ inspect ──▶ investigate ──▶ explain ──▶ propose ──▶ approve ──▶ fix ──▶ regress ──▶ verify ──▶ history ──▶ release
 ```
 
-Artifacts are designed around bounded content, hashes, lineage, authority metadata, and explicit limitations rather than hidden model reasoning or hidden release logic.
+| Step | Command | Description | Authority Level |
+|---|---|---|---|
+| **1. Scan** | `preflight scan .` | Deterministic security rule & policy check | Deterministic Engine |
+| **2. Review** | `preflight review .` | Corroborates static findings with advisory AI analysis | Non-authoritative (`gate_effect=NONE`) |
+| **3. Inspect** | `preflight inspect <id>` | Dumps full cryptographic evidence for a finding | Read-Only Lineage |
+| **4. Investigate** | `preflight investigate` | Bounded diagnostic context gathering | Advisory Plane |
+| **5. Explain** | `preflight explain` | Generates cited explanation of risk mechanics | Advisory Plane |
+| **6. Propose** | `preflight propose` | Generates candidate remediation patch | Advisory Plane |
+| **7. Approve** | `preflight approve <id>` | Human reviews proposal and signs authorization | **Explicit Human Authority** |
+| **8. Fix** | `preflight fix` | Materializes content-addressed patch safely | Controlled Workspace Action |
+| **9. Regress** | `preflight regress` | Validates patch does not cause functional regressions | Deterministic Test Suite |
+| **10. Verify** | `preflight verify` | Proves the specific vulnerability is closed | Deterministic Verification |
+| **11. History** | `preflight history` | Appends record to immutable audit ledger | Cryptographic Ledger |
+| **12. Release** | `preflight release` | Issues final verdict: `READY`, `HOLD`, `BLOCK`, `ERROR` | **Authoritative Deterministic Gate** |
 
 ---
 
-## MCP, Claude Code, and Codex
+## 🌐 MCP & Agent Integration
 
-### MCP (`preflight-mcp`)
+Preflight provides a native [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server (`preflight-mcp`), allowing AI coding assistants to leverage Preflight's diagnostic and verification tools within strict safety boundaries.
 
-Run the bounded stdio MCP server directly from GitHub or locally. It exposes diagnostic, verification, and release surfaces while deliberately not exposing human approval, patch generation, or workspace materialization as autonomous tools.
-
-#### Run directly from GitHub (zero installation needed)
-Any user can run `preflight-mcp` directly without cloning the repository using [`uvx`](https://docs.astral.sh/uv/concepts/tools/):
+### Zero-Installation Run with `uvx`
+Launch the server without manual installation:
 
 ```bash
-uvx --from git+https://github.com/haytamAroui/preflight.git --with "mcp>=2,<3" preflight-mcp
+uvx --from before-deploy preflight-mcp
 ```
 
-#### Run locally
-Inside the cloned repository:
+### Agent Configuration
 
-```bash
-uv run --with "mcp>=2,<3" preflight-mcp
-# or using the backwards-compatible alias:
-# uv run --with "mcp>=2,<3" before-deploy-mcp
-```
-
-#### Agent & IDE Configuration (Claude Desktop, Cursor, Antigravity)
-Add this to your MCP configuration file (e.g., `claude_desktop_config.json`):
+Add Preflight to your agent or IDE config (e.g., Claude Desktop, Cursor, Antigravity, Windsurf):
 
 ```json
 {
   "mcpServers": {
     "preflight": {
       "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/haytamAroui/preflight.git",
-        "--with",
-        "mcp>=2,<3",
-        "preflight-mcp"
-      ]
+      "args": ["--from", "before-deploy", "preflight-mcp"]
     }
   }
 }
 ```
 
-See [`docs/MCP_API_SURFACE.md`](docs/MCP_API_SURFACE.md) for tool schema and capability contracts.
+> **Security Sandbox by Design**: The MCP server exposes inspection, diagnostic, and verification tools to your agent, but deliberately **withholds** human approval, autonomous patch generation, and unconfirmed workspace writes.
 
-### Claude Code
-
-The repository includes a thin Claude Code client that delegates to the canonical CLI instead of reimplementing policy or release logic.
-
-See [`clients/claude-code/README.md`](clients/claude-code/README.md).
-
-### Codex
-
-The repository includes a repo-scoped explicit-use Codex skill under `.agents/skills/before-deploy-assure/` with the same authority boundaries.
-
-See [`docs/CODEX_THIN_CLIENT.md`](docs/CODEX_THIN_CLIENT.md).
+### Thin Clients & Skills
+- **Claude Code**: Native delegation client available in [`clients/claude-code/`](clients/claude-code/README.md).
+- **Codex / Antigravity Skill**: Pre-configured workflow skill under [`.agents/skills/before-deploy-assure/`](.agents/skills/before-deploy-assure/SKILL.md).
 
 ---
 
-## Benchmarked instead of hand-waved
+## 🛡️ Security Domain Coverage
 
-Preflight includes a diagnostic benchmark plane for measuring advisory review quality without turning benchmark scores into release authority.
+Preflight features a modular capability registry with specialized controls across multiple languages and ecosystems:
 
-The benchmark stack includes:
-
-- versioned labeled-defect corpora;
-- deterministic precision/recall/F1 scoring;
-- static-vs-exploratory comparative runs;
-- blinded caller-context pilot corpora;
-- repeated-run stability metrics;
-- latency, context, token, and cost provenance;
-- an Evaluation Lab for repeated blinded model benchmarks;
-- an independent real-world validation corpus of pinned pre-fix snapshots;
-- bounded transient retry handling and optional cumulative token/cost budgets;
-- frozen production-readiness criteria and a deterministic engineering-readiness evaluator.
-
-**Benchmark and model-evaluation outputs remain diagnostic. They cannot grant an application
-release, and they cannot block one either.** The Evaluation Lab runs independently of the release
-pipeline, so a model outage or a model update never freezes a release of unchanged software, and a
-`STOP` model result is reported rather than silently treated as a build failure.
-
-See [`docs/REVIEW_BENCHMARK.md`](docs/REVIEW_BENCHMARK.md), [`docs/CALLER_PILOT_V2.md`](docs/CALLER_PILOT_V2.md), [`docs/PROVIDER_RESILIENCE.md`](docs/PROVIDER_RESILIENCE.md), and [`docs/PRODUCTION_READINESS_CRITERIA.md`](docs/PRODUCTION_READINESS_CRITERIA.md).
+| Ecosystem / Domain | Covered Security Controls & Detectors |
+| :--- | :--- |
+| **Python / FastAPI** | Auth/AuthZ markers, SSRF vectors, SQL Injection, Command Injection, JWT verification bypasses, Unsafe file uploads, CORS misconfigurations, Sensitive data in logs |
+| **TypeScript / Next.js** | Server Action boundaries, SSRF vulnerabilities, Secret exposure in client bundles (`NEXT_PUBLIC_*`), Route error disclosure, Wildcard CORS |
+| **Java / Spring** | Spring Security `.permitAll()` misconfigurations, Actuator endpoint exposure, Credentialed wildcard CORS, JPA native SQL injection |
+| **Go** | Insecure TLS configurations, Module checksum verification, Known dependency vulnerabilities, Optional Gosec adapter |
+| **Infrastructure & CI** | Dockerfile best practices, GitHub Actions workflow permissions & SHA pinning, Compose privileged services, Terraform configuration security |
+| **Supply Chain** | Multi-ecosystem lockfile validation (Python, Node.js, Go, Rust, Ruby, PHP), SBOM generation, Artifact provenance |
 
 ---
 
-## What Preflight is not
+## 🚦 Policy Outcomes & Disposition
 
-Preflight is not a penetration-test replacement, a compliance certification, or proof that no vulnerability exists.
+### Policy Evaluation Exit Codes
 
-It does not let an LLM:
+| Status | Exit Code | Description |
+|---|:---:|---|
+| `PASS` | `0` | All applicable security controls passed with no blocking issues |
+| `NOT_EVALUATED` | `0` | No controls applied to the targeted scope |
+| `BLOCK` | `10` | One or more blocking security violations found |
+| `WAIVER_REQUIRED` | `11` | Blocking violation requires an active, approved waiver |
+| `ERROR` | `20` | Runtime execution error, missing evidence, or invalid configuration |
 
-- rewrite deterministic policy;
-- invent a waiver;
-- upgrade an advisory claim into a deterministic finding;
-- silently approve its own remediation;
-- materialize a patch without explicit confirmation;
-- fabricate regression evidence;
-- select an older “better” verification over the current one;
-- declare a release `READY` from model judgment.
+### Final Release Dispositions
 
-Those boundaries are product features.
-
----
-
-## Documentation
-
-| Topic | Documentation |
-|---|---|
-| Deterministic controls & adaptive planning | [`CONTROL_CATALOG.md`](docs/CONTROL_CATALOG.md), [`ADAPTIVE_PROJECT_PROFILING.md`](docs/ADAPTIVE_PROJECT_PROFILING.md) |
-| Security-domain model | [`SECURITY_DOMAIN_CONTROL_CATALOG.md`](docs/SECURITY_DOMAIN_CONTROL_CATALOG.md), [`DOMAIN_ASSURANCE.md`](docs/DOMAIN_ASSURANCE.md) |
-| Unified AI review | [`ADVISORY_REVIEW_PLANE.md`](docs/ADVISORY_REVIEW_PLANE.md), [`ADVISORY_PROVIDER_RUNTIME.md`](docs/ADVISORY_PROVIDER_RUNTIME.md) |
-| Evidence lineage | [`EVIDENCE_GRAPH.md`](docs/EVIDENCE_GRAPH.md), [`EVIDENCE_CORRELATION.md`](docs/EVIDENCE_CORRELATION.md), [`EVIDENCE_CORROBORATION.md`](docs/EVIDENCE_CORROBORATION.md) |
-| Investigation & explanation | [`EVIDENCE_INSPECT.md`](docs/EVIDENCE_INSPECT.md), [`EVIDENCE_INVESTIGATION.md`](docs/EVIDENCE_INVESTIGATION.md), [`EVIDENCE_EXPLANATION.md`](docs/EVIDENCE_EXPLANATION.md) |
-| Challenge & assurance | [`EVIDENCE_CHALLENGE.md`](docs/EVIDENCE_CHALLENGE.md), [`ASSURANCE_CASE.md`](docs/ASSURANCE_CASE.md) |
-| Remediation & verification | [`REMEDIATION_PROPOSAL.md`](docs/REMEDIATION_PROPOSAL.md), [`HUMAN_APPROVAL_PATCH.md`](docs/HUMAN_APPROVAL_PATCH.md), [`VERIFICATION.md`](docs/VERIFICATION.md) |
-| Release authority | [`VERIFICATION_HISTORY.md`](docs/VERIFICATION_HISTORY.md), [`RELEASE_DISPOSITION.md`](docs/RELEASE_DISPOSITION.md) |
-| Benchmarking | [`REVIEW_BENCHMARK.md`](docs/REVIEW_BENCHMARK.md), [`CALLER_PILOT_V2.md`](docs/CALLER_PILOT_V2.md), [`PRODUCTION_READINESS_CRITERIA.md`](docs/PRODUCTION_READINESS_CRITERIA.md) |
-| Integrations | [`MCP_API_SURFACE.md`](docs/MCP_API_SURFACE.md), [`CLAUDE_THIN_CLIENT.md`](docs/CLAUDE_THIN_CLIENT.md), [`CODEX_THIN_CLIENT.md`](docs/CODEX_THIN_CLIENT.md) |
+| Disposition | Meaning | Condition |
+|---|---|---|
+| **`READY`** | **Authorized to Ship** | All deterministic policy requirements and verification milestones are fully met. |
+| **`HOLD`** | **Release Paused** | Required evidence is incomplete, stale, drifted, or active under temporary waiver. |
+| **`BLOCK`** | **Release Prohibited** | Deterministic policy failed or latest verification failed. |
+| **`ERROR`** | **Evaluation Failure** | Authoritative gate could not evaluate required inputs safely. |
 
 ---
 
-## Project status
+## 📚 Documentation
 
-Preflight is actively developed. The deterministic authority boundary is the architectural constant: advisory engines, benchmarks, integrations, and control depth can evolve without changing who is allowed to decide a release.
+Detailed architectural specifications, schemas, and design docs:
 
-The production-readiness framework intentionally distinguishes **implemented capability** from **proven operational maturity**, and it tiers those claims. Releases are gated on **software** readiness — the deterministic engine, policy gate, CLI, packaging, self-scan, and the §2 safety invariants. Model-evaluation criteria (the repeated blinded benchmark and the independent real-world corpus) are measured and reported by the Evaluation Lab but do not gate a release. See [`docs/PRODUCTION_READINESS_CRITERIA.md`](docs/PRODUCTION_READINESS_CRITERIA.md) and [`docs/RELEASE_READINESS_GATE.md`](docs/RELEASE_READINESS_GATE.md).
+- **Core Authority & Architecture**:
+  - [Deterministic Release Disposition (`docs/RELEASE_DISPOSITION.md`)](docs/RELEASE_DISPOSITION.md)
+  - [Advisory Review Plane (`docs/ADVISORY_REVIEW_PLANE.md`)](docs/ADVISORY_REVIEW_PLANE.md)
+  - [Production Readiness Criteria (`docs/PRODUCTION_READINESS_CRITERIA.md`)](docs/PRODUCTION_READINESS_CRITERIA.md)
+- **Controls & Profiling**:
+  - [Control Catalog (`docs/CONTROL_CATALOG.md`)](docs/CONTROL_CATALOG.md)
+  - [Security Domain Catalog (`docs/SECURITY_DOMAIN_CONTROL_CATALOG.md`)](docs/SECURITY_DOMAIN_CONTROL_CATALOG.md)
+  - [Adaptive Project Profiling (`docs/ADAPTIVE_PROJECT_PROFILING.md`)](docs/ADAPTIVE_PROJECT_PROFILING.md)
+- **Evidence & Remediation**:
+  - [Evidence Graph Specification (`docs/EVIDENCE_GRAPH.md`)](docs/EVIDENCE_GRAPH.md)
+  - [Evidence Correlation & Corroboration (`docs/EVIDENCE_CORRELATION.md`)](docs/EVIDENCE_CORRELATION.md)
+  - [Human Approval & Content-Addressed Patches (`docs/HUMAN_APPROVAL_PATCH.md`)](docs/HUMAN_APPROVAL_PATCH.md)
+  - [Verification & History Tracking (`docs/VERIFICATION_HISTORY.md`)](docs/VERIFICATION_HISTORY.md)
+- **Integrations & Protocols**:
+  - [MCP API Surface Specification (`docs/MCP_API_SURFACE.md`)](docs/MCP_API_SURFACE.md)
+  - [Claude Code Thin Client (`docs/CLAUDE_THIN_CLIENT.md`)](docs/CLAUDE_THIN_CLIENT.md)
+  - [Codex Thin Client (`docs/CODEX_THIN_CLIENT.md`)](docs/CODEX_THIN_CLIENT.md)
 
 ---
 
-## License
+## ⚖️ License
 
-MIT — see [`LICENSE`](LICENSE).
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.
